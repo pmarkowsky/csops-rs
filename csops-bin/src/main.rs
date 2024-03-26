@@ -113,13 +113,8 @@ fn main() {
 
     match args.operation.as_str() {
         "status" => {
-            let mut status:u32 = 0;
-            let status_slice = unsafe {
-                std::slice::from_raw_parts_mut((&mut status as *mut u32) as *mut u8, std::mem::size_of::<u32>())
-            };
-            let result = csops::csops(args.pid, csops::codesign::CS_OPS_STATUS, status_slice);
+            let (result, status ) = csops_int(args.pid, codesign::CS_OPS_STATUS);
             if result < 0 {
-                //TODO handle error and print strerror.
                 let errno = Errno::last();
                 println!("Error: {}, {}", result, errno.desc());
             } else {
