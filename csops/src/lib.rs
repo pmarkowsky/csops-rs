@@ -22,8 +22,12 @@ mod tests {
 
     #[test]
     fn test_status() {
-        let status: u32 = 0;
-        let result = csops(1, codesign::CS_OPS_STATUS, &mut status.to_ne_bytes());
+        let mut status: u32 = 0;
+        let status_slice = unsafe {
+            std::slice::from_raw_parts_mut((&mut status as *mut u32) as *mut u8, std::mem::size_of::<u32>())
+        };
+        let result = csops(1, codesign::CS_OPS_STATUS, status_slice);
         assert_eq!(result, 0);
+        assert_eq!(status & codesign::CS_VALID, codesign::CS_VALID);
     }
 }
