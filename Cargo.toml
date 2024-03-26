@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+	"csops",
+	"csops-bin",
+]
