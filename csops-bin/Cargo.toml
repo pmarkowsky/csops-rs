@@ -8,4 +8,5 @@ edition = "2021"
 [dependencies]
 clap = { version = "4.5.4", features = ["derive"] }
 csops = { path = "../csops" }
+hex = "0.4.3"
 nix = "0.28.0"

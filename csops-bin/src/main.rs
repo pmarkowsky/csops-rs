@@ -1,6 +1,9 @@
 use csops::*;
 use clap::Parser;
 use nix::errno::Errno;
+use hex;
+
+const SHA1_DIGEST_LENGTH: usize = 20;
 
 
 fn flag_set(flags: u32, flag: u32) -> bool {
@@ -120,6 +123,100 @@ fn main() {
             } else {
                 decode_status(args.pid, status);
             }
+        },
+        "mark_invalid" => {
+            let (result , _) = csops_int(args.pid, codesign::CS_OPS_MARKINVALID);
+            if result < 0 {
+                let errno = Errno::last();
+                println!("Error: {}, {}", result, errno.desc());
+            }
+        },
+        "mark_hard" => {
+            let (result, _) = csops_int(args.pid, codesign::CS_OPS_MARKHARD);
+            if result < 0 {
+                let errno = Errno::last();
+                println!("Error: {}, {}", result, errno.desc());
+            }
+        },
+        "mark_kill" => {
+            let (result, _) = csops_int(args.pid, codesign::CS_OPS_MARKKILL);
+            if result < 0 {
+                let errno = Errno::last();
+                println!("Error: {}, {}", result, errno.desc());
+            }
+        },
+        "executable_path" => {
+            const path_size: usize = 1024;
+            let mut buffer : [u8; path_size] = [0; path_size];
+            let result = csops(args.pid, codesign::CS_OPS_PIDPATH, &mut buffer);
+            if result < 0 {
+                let errno = Errno::last();
+                println!("Error: {}, {}", result, errno.desc());
+                return
+            }
+            let path = String::from_utf8(buffer.to_vec()).unwrap();
+            println!("PID: {} -> Executable Path: {}", args.pid, path);
+        },
+        "cdhash" => {
+            let mut buffer : [u8; SHA1_DIGEST_LENGTH] = [0; SHA1_DIGEST_LENGTH];
+            let result = csops(args.pid, codesign::CS_OPS_CDHASH, &mut buffer);
+            if result < 0 {
+                let errno = Errno::last();
+                println!("Error: {}, {}", result, errno.desc());
+                return
+            }
+            let cdhash = hex::encode(buffer);
+            println!("PID: {} -> CDHash: {}", args.pid, cdhash);
+        },
+        "entitlements" => {
+            const entitlements_size: usize = 1024 * 1024;
+            let mut buffer : [u8; entitlements_size] = [0; entitlements_size];
+            let result = csops(args.pid, codesign::CS_OPS_ENTITLEMENTS_BLOB, &mut buffer);
+            if result < 0 {
+                let errno = Errno::last();
+                println!("Error: {}, {}", result, errno.desc());
+                return
+            }
+            let entitlements = String::from_utf8(buffer.to_vec()).unwrap();
+            println!("PID: {} -> Entitlements: {}", args.pid, entitlements);
+        },
+        "clear_platform" => {
+            let (result, _) = csops_int(args.pid, codesign::CS_OPS_CLEARPLATFORM);
+            if result < 0 {
+                let errno = Errno::last();
+                println!("Error: {}, {}", result, errno.desc());
+            }
+        },
+        "clear_installer" => {
+            let (result, _) = csops_int(args.pid, codesign::CS_OPS_CLEARINSTALLER);
+            if result < 0 {
+                let errno = Errno::last();
+                println!("Error: {}, {}", result, errno.desc());
+            }
+        },
+        "signingid" => {
+            const signingid_size: usize = (1024 * 1024) as usize;
+            let mut buffer : [u8; signingid_size] = [0; signingid_size];
+            let result = csops(args.pid, codesign::CS_OPS_IDENTITY, &mut buffer);
+            if result < 0 {
+                let errno = Errno::last();
+                println!("Error: {}, {}", result, errno.desc());
+                return
+            }
+            let signingid = String::from_utf8(buffer.to_vec()).unwrap();
+            println!("PID: {} -> Code Signing ID: {}", args.pid, signingid);
+        },
+        "teamid" => {
+            const teamid_size: usize = (codesign::CS_MAX_TEAMID_LEN - 1) as usize;
+            let mut buffer : [u8; teamid_size] = [0; teamid_size];
+            let result = csops(args.pid, codesign::CS_OPS_TEAMID, &mut buffer);
+            if result < 0 {
+                let errno = Errno::last();
+                println!("Error: {}, {}", result, errno.desc());
+                return
+            }
+            let teamid = String::from_utf8(buffer.to_vec()).unwrap();
+            println!("PID: {} -> TeamID: {}", args.pid, teamid);
         },
         _ => {
             println!("Invalid operation");
