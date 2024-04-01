@@ -110,7 +110,6 @@ struct Args {
     pid: i32,
 }
 
-
 fn main() {
     let args = Args::parse();
 
