@@ -1,10 +1,9 @@
-use csops::*;
 use clap::Parser;
-use nix::errno::Errno;
+use csops::*;
 use hex;
+use nix::errno::Errno;
 
 const SHA1_DIGEST_LENGTH: usize = 20;
-
 
 fn flag_set(flags: u32, flag: u32) -> bool {
     flags & flag == flag
@@ -12,100 +11,69 @@ fn flag_set(flags: u32, flag: u32) -> bool {
 
 pub fn decode_status(pid: i32, status: u32) {
     print!("PID: {} cs_flags: {}", pid, status);
-    if flag_set(status, codesign::CS_VALID) {
-        print!("; CS_VALID ");
-    }
-    if flag_set(status, codesign::CS_ADHOC) {
-        print!("; CS_ADHOC ");
-    }
-    if flag_set(status, codesign::CS_GET_TASK_ALLOW) {
-        print!("; CS_GET_TASK_ALLOW ");
-    }
-    if flag_set(status, codesign::CS_INSTALLER) {
-        print!("; CS_INSTALLER ");
-    }
-    if flag_set(status, codesign::CS_FORCED_LV) {
-        print!("; CS_FORCED_LV ");
-    }
-    if flag_set(status, codesign::CS_INVALID_ALLOWED) {
-        print!("; CS_INVALID_ALLOWED ");
-    }
-    if flag_set(status, codesign::CS_HARD) {
-        print!("; CS_HARD ");
-    }
-    if flag_set(status, codesign::CS_KILL) {
-        print!("; CS_KILL ");
-    }
-    if flag_set(status, codesign::CS_CHECK_EXPIRATION) {
-        print!("; CS_CHECK_EXPIRATION ");
-    }
-    if flag_set(status, codesign::CS_RESTRICT) {
-        print!("; CS_RESTRICT ");
-    }
-    if flag_set(status, codesign::CS_ENFORCEMENT) {
-        print!("; CS_ENFORCEMENT ");
-    }
-    if flag_set(status, codesign::CS_REQUIRE_LV) {
-        print!("; CS_REQUIRE_LV ");
-    }
-    if flag_set(status, codesign::CS_ENTITLEMENTS_VALIDATED) {
-        print!("; CS_ENTITLEMENTS_VALIDATED ");
-    }
-    if flag_set(status, codesign::CS_NVRAM_UNRESTRICTED) {
-        print!("; CS_NVRAM_UNRESTRICTED ");
-    }
-    if flag_set(status, codesign::CS_RUNTIME) {
-        print!("; CS_RUNTIME ");
-    }
-    if flag_set(status, codesign::CS_LINKER_SIGNED) {
-        print!("; CS_LINKER_SIGNED ");
-    }
-    if flag_set(status, codesign::CS_EXEC_SET_HARD) {
-        print!("; CS_EXEC_SET_HARD ");
-    }
-    if flag_set(status, codesign::CS_EXEC_SET_KILL) {
-        print!("; CS_EXEC_SET_KILL ");
-    }
-    if flag_set(status, codesign::CS_EXEC_SET_ENFORCEMENT) {
-        print!("; CS_EXEC_SET_ENFORCEMENT ");
-    }
-    if flag_set(status, codesign::CS_EXEC_INHERIT_SIP) {
-        print!("; CS_EXEC_INHERIT_SIP ");
-    }
-    if flag_set(status, codesign::CS_KILLED) {
-        print!("; CS_KILLED ");
-    }
-    if flag_set(status, codesign::CS_NO_UNTRUSTED_HELPERS) {
-        print!("; CS_NO_UNTRUSTED_HELPERS ");
-    }
-    if flag_set(status, codesign::CS_PLATFORM_BINARY) {
-        print!("; CS_PLATFORM_BINARY ");
-    }
-    if flag_set(status, codesign::CS_PLATFORM_PATH) {
-        print!("; CS_PLATFORM_PATH ");
-    }
-    if flag_set(status, codesign::CS_DEBUGGED) {
-        print!("; CS_DEBUGGED ");
-    }
-    if flag_set(status, codesign::CS_SIGNED) {
-        print!("; CS_SIGNED ");
-    }
-    if flag_set(status, codesign::CS_DEV_CODE) {
-        print!("; CS_DEV_CODE ");
-    }
-    if flag_set(status, codesign::CS_DATAVAULT_CONTROLLER) {
-        print!("; CS_DATAVAULT_CONTROLLER ");
+    let flags = [
+        (codesign::CS_VALID, "CS_VALID"),
+        (codesign::CS_ADHOC, "CS_ADHOC"),
+        (codesign::CS_GET_TASK_ALLOW, "CS_GET_TASK_ALLOW"),
+        (codesign::CS_INSTALLER, "CS_INSTALLER"),
+        (codesign::CS_FORCED_LV, "CS_FORCED_LV"),
+        (codesign::CS_INVALID_ALLOWED, "CS_INVALID_ALLOWED"),
+        (codesign::CS_HARD, "CS_HARD"),
+        (codesign::CS_KILL, "CS_KILL"),
+        (codesign::CS_CHECK_EXPIRATION, "CS_CHECK_EXPIRATION"),
+        (codesign::CS_RESTRICT, "CS_RESTRICT"),
+        (codesign::CS_ENFORCEMENT, "CS_ENFORCEMENT"),
+        (codesign::CS_REQUIRE_LV, "CS_REQUIRE_LV"),
+        (
+            codesign::CS_ENTITLEMENTS_VALIDATED,
+            "CS_ENTITLEMENTS_VALIDATED",
+        ),
+        (codesign::CS_NVRAM_UNRESTRICTED, "CS_NVRAM_UNRESTRICTED"),
+        (codesign::CS_RUNTIME, "CS_RUNTIME"),
+        (codesign::CS_LINKER_SIGNED, "CS_LINKER_SIGNED"),
+        (codesign::CS_EXEC_SET_HARD, "CS_EXEC_SET_HARD"),
+        (codesign::CS_EXEC_SET_KILL, "CS_EXEC_SET_KILL"),
+        (codesign::CS_EXEC_SET_ENFORCEMENT, "CS_EXEC_SET_ENFORCEMENT"),
+        (codesign::CS_EXEC_INHERIT_SIP, "CS_EXEC_INHERIT_SIP"),
+        (codesign::CS_KILLED, "CS_KILLED"),
+        (codesign::CS_NO_UNTRUSTED_HELPERS, "CS_NO_UNTRUSTED_HELPERS"),
+        (codesign::CS_PLATFORM_BINARY, "CS_PLATFORM_BINARY"),
+        (codesign::CS_PLATFORM_PATH, "CS_PLATFORM_PATH"),
+        (codesign::CS_DEBUGGED, "CS_DEBUGGED"),
+        (codesign::CS_SIGNED, "CS_SIGNED"),
+        (codesign::CS_DEV_CODE, "CS_DEV_CODE"),
+        (codesign::CS_DATAVAULT_CONTROLLER, "CS_DATAVAULT_CONTROLLER"),
+    ];
+
+    for (flag, output) in flags {
+        if flag_set(status, flag) {
+            print!("; {} ", output);
+        }
     }
     println!();
 }
 
+#[derive(clap::ValueEnum, Clone, Debug)]
+enum CSOperation {
+    Status,
+    MarkInvalid,
+    MarkHard,
+    MarkKill,
+    ExecutablePath,
+    CDHash,
+    Entitlements,
+    ClearPlatform,
+    ClearInstaller,
+    SigningID,
+    TeamID,
+}
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
     /// csop operation
     #[arg(short, long)]
-    operation: String,
+    operation: CSOperation,
     // pid
     pid: i32,
 }
@@ -113,110 +81,110 @@ struct Args {
 fn main() {
     let args = Args::parse();
 
-    match args.operation.as_str() {
-        "status" => {
-            let (result, status ) = csops_int(args.pid, codesign::CS_OPS_STATUS);
+    match args.operation {
+        CSOperation::Status => {
+            let (result, status) = csops_int(args.pid, codesign::CS_OPS_STATUS);
             if result < 0 {
                 let errno = Errno::last();
                 println!("Error: {}, {}", result, errno.desc());
             } else {
                 decode_status(args.pid, status);
             }
-        },
-        "mark_invalid" => {
-            let (result , _) = csops_int(args.pid, codesign::CS_OPS_MARKINVALID);
+        }
+        CSOperation::MarkInvalid => {
+            let (result, _) = csops_int(args.pid, codesign::CS_OPS_MARKINVALID);
             if result < 0 {
                 let errno = Errno::last();
                 println!("Error: {}, {}", result, errno.desc());
             }
-        },
-        "mark_hard" => {
+        }
+        CSOperation::MarkHard => {
             let (result, _) = csops_int(args.pid, codesign::CS_OPS_MARKHARD);
             if result < 0 {
                 let errno = Errno::last();
                 println!("Error: {}, {}", result, errno.desc());
             }
-        },
-        "mark_kill" => {
+        }
+        CSOperation::MarkKill => {
             let (result, _) = csops_int(args.pid, codesign::CS_OPS_MARKKILL);
             if result < 0 {
                 let errno = Errno::last();
                 println!("Error: {}, {}", result, errno.desc());
             }
-        },
-        "executable_path" => {
-            const path_size: usize = 1024;
-            let mut buffer : [u8; path_size] = [0; path_size];
+        }
+        CSOperation::ExecutablePath => {
+            const PATH_SIZE: usize = 1024;
+            let mut buffer: [u8; PATH_SIZE] = [0; PATH_SIZE];
             let result = csops(args.pid, codesign::CS_OPS_PIDPATH, &mut buffer);
             if result < 0 {
                 let errno = Errno::last();
                 println!("Error: {}, {}", result, errno.desc());
-                return
+                return;
             }
             let path = String::from_utf8(buffer.to_vec()).unwrap();
             println!("PID: {} -> Executable Path: {}", args.pid, path);
-        },
-        "cdhash" => {
-            let mut buffer : [u8; SHA1_DIGEST_LENGTH] = [0; SHA1_DIGEST_LENGTH];
+        }
+        CSOperation::CDHash => {
+            let mut buffer: [u8; SHA1_DIGEST_LENGTH] = [0; SHA1_DIGEST_LENGTH];
             let result = csops(args.pid, codesign::CS_OPS_CDHASH, &mut buffer);
             if result < 0 {
                 let errno = Errno::last();
                 println!("Error: {}, {}", result, errno.desc());
-                return
+                return;
             }
             let cdhash = hex::encode(buffer);
             println!("PID: {} -> CDHash: {}", args.pid, cdhash);
-        },
-        "entitlements" => {
-            const entitlements_size: usize = 1024 * 1024;
-            let mut buffer : [u8; entitlements_size] = [0; entitlements_size];
+        }
+        CSOperation::Entitlements => {
+            const ENTITLEMENTS_SIZE: usize = 1024 * 1024;
+            let mut buffer: [u8; ENTITLEMENTS_SIZE] = [0; ENTITLEMENTS_SIZE];
             let result = csops(args.pid, codesign::CS_OPS_ENTITLEMENTS_BLOB, &mut buffer);
             if result < 0 {
                 let errno = Errno::last();
                 println!("Error: {}, {}", result, errno.desc());
-                return
+                return;
             }
             let entitlements = String::from_utf8(buffer.to_vec()).unwrap();
             println!("PID: {} -> Entitlements: {}", args.pid, entitlements);
-        },
-        "clear_platform" => {
+        }
+        CSOperation::ClearPlatform => {
             let (result, _) = csops_int(args.pid, codesign::CS_OPS_CLEARPLATFORM);
             if result < 0 {
                 let errno = Errno::last();
                 println!("Error: {}, {}", result, errno.desc());
             }
-        },
-        "clear_installer" => {
+        }
+        CSOperation::ClearInstaller => {
             let (result, _) = csops_int(args.pid, codesign::CS_OPS_CLEARINSTALLER);
             if result < 0 {
                 let errno = Errno::last();
                 println!("Error: {}, {}", result, errno.desc());
             }
-        },
-        "signingid" => {
-            const signingid_size: usize = (1024 * 1024) as usize;
-            let mut buffer : [u8; signingid_size] = [0; signingid_size];
+        }
+        CSOperation::SigningID => {
+            const SIGNINGID_SIZE: usize = (1024 * 1024) as usize;
+            let mut buffer: [u8; SIGNINGID_SIZE] = [0; SIGNINGID_SIZE];
             let result = csops(args.pid, codesign::CS_OPS_IDENTITY, &mut buffer);
             if result < 0 {
                 let errno = Errno::last();
                 println!("Error: {}, {}", result, errno.desc());
-                return
+                return;
             }
             let signingid = String::from_utf8(buffer.to_vec()).unwrap();
             println!("PID: {} -> Code Signing ID: {}", args.pid, signingid);
-        },
-        "teamid" => {
-            const teamid_size: usize = (codesign::CS_MAX_TEAMID_LEN - 1) as usize;
-            let mut buffer : [u8; teamid_size] = [0; teamid_size];
+        }
+        CSOperation::TeamID => {
+            const TEAMID_SIZE: usize = (codesign::CS_MAX_TEAMID_LEN - 1) as usize;
+            let mut buffer: [u8; TEAMID_SIZE] = [0; TEAMID_SIZE];
             let result = csops(args.pid, codesign::CS_OPS_TEAMID, &mut buffer);
             if result < 0 {
                 let errno = Errno::last();
                 println!("Error: {}, {}", result, errno.desc());
-                return
+                return;
             }
             let teamid = String::from_utf8(buffer.to_vec()).unwrap();
             println!("PID: {} -> TeamID: {}", args.pid, teamid);
-        },
+        }
         _ => {
             println!("Invalid operation");
         }
