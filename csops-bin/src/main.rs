@@ -202,6 +202,7 @@ fn main() {
             let blob = &cs_blob {
                 type_: u32::from_be_bytes(buffer[0..4].try_into().unwrap()),
                 len: u32::from_be_bytes(buffer[4..8].try_into().unwrap()),
+                // This is a hack to work around bindgen's quirks.
                 data: __IncompleteArrayField::new(),
             };
 
