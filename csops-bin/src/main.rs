@@ -1,9 +1,11 @@
 use clap::Parser;
+use codesign::{__IncompleteArrayField, cs_blob};
 use csops::*;
 use hex;
 use nix::errno::Errno;
 
 const SHA1_DIGEST_LENGTH: usize = 20;
+const CSOPS_MAX_BUFFER_SIZE: usize = 1024 * 1024;
 
 fn flag_set(flags: u32, flag: u32) -> bool {
     flags & flag == flag
@@ -55,24 +57,45 @@ pub fn decode_status(pid: i32, status: u32) {
 
 #[derive(clap::ValueEnum, Clone, Debug)]
 enum CSOperation {
+    /// Get the code signature status of the given PID
     Status,
+    /// Invalidate the given PID's Code Signature
     MarkInvalid,
+    /// Sets the CS_HARD (0x00000100) code signing flag on the given PID
     MarkHard,
+    /// Sets the CS_KILL (0x00000200) code signing flag on the given PID
     MarkKill,
+    /// Get the executable path name of the PID. Used by taskgated
     ExecutablePath,
+    /// Get the code directory hash (CDHASH) of the given PID
     CDHash,
+    /// Get the entitlements blob of the given PID in XML format
     Entitlements,
+    /// Clear the CS_PLATFORM_BINARY (0x04000000) code signing flag on the given PID
     ClearPlatform,
+    /// Clear the CS_INSTALLER (0x00000008) code signing flag on the given PID
     ClearInstaller,
+    /// Clear the CS_REQUIRE_LV (0x0002000) code signing flag on the given PID
+    ClearLV,
+    /// Get the code signature identity of the given PID
     SigningID,
+    /// Get the Team ID of the given PID
     TeamID,
+    /// Get the entire code signing blob of the given PID
+    Blob,
+    /// Get the entitlements blob in DER format from the given PID
+    DEREntitlements,
+    /// Get the validation category of the given PID
+    ValidationCategory,
+    /// Get the file offset of the active Mach-O section from the given PID
+    MachOOffset,
 }
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
     /// csop operation
-    #[arg(short, long)]
+    #[arg(value_enum)]
     operation: CSOperation,
     // pid
     pid: i32,
@@ -136,7 +159,7 @@ fn main() {
             println!("PID: {} -> CDHash: {}", args.pid, cdhash);
         }
         CSOperation::Entitlements => {
-            const ENTITLEMENTS_SIZE: usize = 1024 * 1024;
+            const ENTITLEMENTS_SIZE: usize = CSOPS_MAX_BUFFER_SIZE;
             let mut buffer: [u8; ENTITLEMENTS_SIZE] = [0; ENTITLEMENTS_SIZE];
             let result = csops(args.pid, codesign::CS_OPS_ENTITLEMENTS_BLOB, &mut buffer);
             if result < 0 {
@@ -147,6 +170,45 @@ fn main() {
             let entitlements = String::from_utf8(buffer.to_vec()).unwrap();
             println!("PID: {} -> Entitlements: {}", args.pid, entitlements);
         }
+        CSOperation::DEREntitlements => {
+            const ENTITLEMENTS_SIZE: usize = CSOPS_MAX_BUFFER_SIZE;
+            let mut buffer: [u8; ENTITLEMENTS_SIZE] = [0; ENTITLEMENTS_SIZE];
+            let result = csops(
+                args.pid,
+                codesign::CS_OPS_DER_ENTITLEMENTS_BLOB,
+                &mut buffer,
+            );
+            if result < 0 {
+                let errno = Errno::last();
+                println!("Error: {}, {}", result, errno.desc());
+                return;
+            }
+            let entitlements = String::from_utf8(buffer.to_vec()).unwrap();
+            println!(
+                "PID: {} -> Embedded Entitlements (DER): {}",
+                args.pid, entitlements
+            );
+        }
+        CSOperation::Blob => {
+            const BLOB_SIZE: usize = CSOPS_MAX_BUFFER_SIZE;
+            let mut buffer: [u8; BLOB_SIZE] = [0; BLOB_SIZE];
+            let result = csops(args.pid, codesign::CS_OPS_BLOB, &mut buffer);
+            if result < 0 {
+                let errno = Errno::last();
+                println!("Error: {}, {}", result, errno.desc());
+                return;
+            }
+
+            let blob = &cs_blob {
+                type_: u32::from_be_bytes(buffer[0..4].try_into().unwrap()),
+                len: u32::from_be_bytes(buffer[4..8].try_into().unwrap()),
+                data: __IncompleteArrayField::new(),
+            };
+
+            for i in 8..blob.len {
+                print!("{}", buffer[i as usize]);
+            }
+        }
         CSOperation::ClearPlatform => {
             let (result, _) = csops_int(args.pid, codesign::CS_OPS_CLEARPLATFORM);
             if result < 0 {
@@ -156,6 +218,13 @@ fn main() {
         }
         CSOperation::ClearInstaller => {
             let (result, _) = csops_int(args.pid, codesign::CS_OPS_CLEARINSTALLER);
+            if result < 0 {
+                let errno = Errno::last();
+                println!("Error: {}, {}", result, errno.desc());
+            }
+        }
+        CSOperation::ClearLV => {
+            let (result, _) = csops_int(args.pid, codesign::CS_OPS_CLEAR_LV);
             if result < 0 {
                 let errno = Errno::last();
                 println!("Error: {}, {}", result, errno.desc());
@@ -184,6 +253,15 @@ fn main() {
             }
             let teamid = String::from_utf8(buffer.to_vec()).unwrap();
             println!("PID: {} -> TeamID: {}", args.pid, teamid);
+        }
+        CSOperation::ValidationCategory => {
+            let (result, status) = csops_int(args.pid, codesign::CS_OPS_VALIDATION_CATEGORY);
+            if result < 0 {
+                let errno = Errno::last();
+                println!("Error: {}, {}", result, errno.desc());
+            } else {
+                println!("PID: {} -> Validation Category: {}", args.pid, status);
+            }
         }
         _ => {
             println!("Invalid operation");
