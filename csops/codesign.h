@@ -29,6 +29,7 @@
 #ifndef _SYS_CODESIGN_H_
 #define _SYS_CODESIGN_H_
 
+#include <stdint.h>
 #include <sys/types.h>
 
 /* code signing attributes of a process */
