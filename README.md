@@ -1,5 +1,7 @@
 # CSOps-rs - A program that invokes the csops system call on MAC OS
 
+[![CI](https://github.com/pmarkowsky/csops-rs/actions/workflows/ci.yml/badge.svg)](https://github.com/pmarkowsky/csops-rs/actions/workflows/ci.yml)
+
 This is a Rust version of [https://github.com/axelexic/CSOps](https://github.com/axelexic/CSOps). 
 
 As stated on  https://github.com/axelexic/CSOps,
