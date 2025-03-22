@@ -21,7 +21,7 @@ prompt$ cargo build --bin csops-bin
 # Usage 
 
 ```
-Usage: csops-bin <OPERATION> <PID>
+Usage: csops-bin [OPTIONS] <OPERATION> <PID>
 
 Arguments:
   <OPERATION>
@@ -29,6 +29,7 @@ Arguments:
 
           Possible values:
           - status:              Get the code signature status of the given PID
+          - set-status:          Set the code signature status flags on the given PID
           - mark-invalid:        Invalidate the given PID's Code Signature
           - mark-hard:           Sets the CS_HARD (0x00000100) code signing flag on the given PID
           - mark-kill:           Sets the CS_KILL (0x00000200) code signing flag on the given PID
@@ -49,6 +50,9 @@ Arguments:
           
 
 Options:
+  -v, --value <VALUE>
+          
+
   -h, --help
           Print help (see a summary with '-h')
 
