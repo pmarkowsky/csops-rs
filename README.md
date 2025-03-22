@@ -62,3 +62,7 @@ Options:
 $  ./csops-bin signing-id 8030
 PID: 8030 -> Code Signing ID: 'com.google.santa.metricservice
 ```
+
+## Maintaining
+
+- Always check the [`csops_internal` function in XNU](https://github.com/search?q=repo%3Aapple-oss-distributions/xnu%20csops_internal&type=code)
