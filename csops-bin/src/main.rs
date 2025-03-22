@@ -275,7 +275,22 @@ fn main() {
                 let errno = Errno::last();
                 println!("Error: {}, {}", result, errno.desc());
             } else {
-                println!("PID: {} -> Validation Category: {}", args.pid, status);
+                // Decode the validation category.
+                let category_str = match status {
+                    0 => "INVALID",
+                    1 => "PLATFORM",
+                    2 => "TESTFLIGHT",
+                    3 => "DEVELOPMENT",
+                    4 => "APP_STORE",
+                    5 => "ENTERPRISE",
+                    6 => "DEVELOPER_ID",
+                    7 => "LOCAL_SIGNING",
+                    8 => "ROSETTA",
+                    9 => "OOPJIT",
+                    10 => "NONE",
+                    _ => "UNKNOWN",
+                };
+                println!("PID: {} -> Validation Category: {} ({})", args.pid, category_str, status);
             }
         }
         _ => {
