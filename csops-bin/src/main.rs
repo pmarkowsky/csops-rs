@@ -1,4 +1,5 @@
 use clap::Parser;
+use clap_num::maybe_hex;
 use codesign::{__IncompleteArrayField, cs_blob};
 use csops::*;
 use hex;
@@ -59,6 +60,8 @@ pub fn decode_status(pid: i32, status: u32) {
 enum CSOperation {
     /// Get the code signature status of the given PID
     Status,
+    /// Set the code signature status flags on the given PID
+    SetStatus,
     /// Invalidate the given PID's Code Signature
     MarkInvalid,
     /// Sets the CS_HARD (0x00000100) code signing flag on the given PID
@@ -99,6 +102,8 @@ struct Args {
     operation: CSOperation,
     // pid
     pid: i32,
+    #[arg(short, long, value_parser=maybe_hex::<u32>)]
+    value: Option<u32>,
 }
 
 fn main() {
@@ -107,6 +112,15 @@ fn main() {
     match args.operation {
         CSOperation::Status => {
             let (result, status) = csops_int(args.pid, codesign::CS_OPS_STATUS);
+            if result < 0 {
+                let errno = Errno::last();
+                println!("Error: {}, {}", result, errno.desc());
+            } else {
+                decode_status(args.pid, status);
+            }
+        }
+        CSOperation::SetStatus => {
+            let (result, status) = csops_int_arg(args.pid, codesign::CS_OPS_SET_STATUS, args.value.expect("must specify a new cs status value"));
             if result < 0 {
                 let errno = Errno::last();
                 println!("Error: {}, {}", result, errno.desc());
