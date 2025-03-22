@@ -88,7 +88,7 @@ enum CSOperation {
     Blob,
     /// Get the entitlements blob in DER format from the given PID
     DEREntitlements,
-    /// Get the validation category of the given PID
+    /// Get the validation category of the given PID (Developer, App Store signed etc.)
     ValidationCategory,
     /// Get the file offset of the active Mach-O section from the given PID
     MachOOffset,

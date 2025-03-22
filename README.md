@@ -43,7 +43,7 @@ Arguments:
           - team-id:             Get the Team ID of the given PID
           - blob:                Get the entire code signing blob of the given PID
           - der-entitlements:    Get the entitlements blob in DER format from the given PID
-          - validation-category: Get the validation category of the given PID
+          - validation-category: Get the validation category of the given PID (Developer, App Store signed etc.)
           - mach-o-offset:       Get the file offset of the active Mach-O section from the given PID
 
   <PID>
